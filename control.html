@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Control de Riego</title>
+  <style>
+    body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+    h1 { color: #2c3e50; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+    #estado { margin-top: 20px; font-size: 18px; }
+  </style>
+</head>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // Configura tu proyecto Firebase
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_PROYECTO.firebaseapp.com",
+    databaseURL: "https://gardenest2-76081-default-rtdb.firebaseio.com",
+    projectId: "TU_PROYECTO",
+    storageBucket: "TU_PROYECTO.appspot.com",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const dbRef = firebase.database().ref("Read");
+
+  // 🔄 Aquí reemplazas setInterval por onValue
+  firebase.database().ref("Read").on("value", (snapshot) => {
+    const data = snapshot.val();
+    document.getElementById("estado").innerHTML = `
+      <strong>Modo:</strong> ${data.Modo}<br>
+      <strong>Humedad:</strong> ${data.Humedad?.Humedad ?? "N/A"}%<br>
+      <strong>Estado:</strong> ${data.Estado}<br>
+      <strong>Aviso:</strong> ${data.Aviso}<br>
+      <strong>Bomba:</strong> ${data.Bomba?.Bomba ? "Encendida" : "Apagada"}
+    `;
+  });
+</script>
+<body>
+  <h1>Panel de Control de Riego</h1>
+
+  <div>
+    <button onclick="setModo('Automatico')">Modo Automático</button>
+    <button onclick="setModo('Manual')">Modo Manual</button>
+  </div>
+
+  <div>
+    <button onclick="setBomba(true)">Encender Bomba</button>
+    <button onclick="setBomba(false)">Apagar Bomba</button>
+  </div>
+
+  <div id="estado">Cargando estado...</div>
+
+  <script>
+    const dbURL = "https://gardenest2-76081-default-rtdb.firebaseio.com/Read";
+
+    function setModo(modo) {
+      fetch(`${dbURL}/Modo.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(modo)
+      });
+    }
+
+    function setBomba(valor) {
+      fetch(`${dbURL}/Bomba/Bomba.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(valor)
+      });
+    }
+
+    function actualizarEstado() {
+      fetch(`${dbURL}.json`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("estado").innerHTML = `
+            <strong>Modo:</strong> ${data.Modo}<br>
+            <strong>Humedad:</strong> ${data.Humedad?.Humedad ?? "N/A"}%<br>
+            <strong>Estado:</strong> ${data.Estado}<br>
+            <strong>Aviso:</strong> ${data.Aviso}<br>
+            <strong>Bomba:</strong> ${data.Bomba?.Bomba ? "Encendida" : "Apagada"}
+          `;
+        });
+    }
+
+    actualizarEstado(); // Primera carga
+  </script>
+</body>
+</html>
